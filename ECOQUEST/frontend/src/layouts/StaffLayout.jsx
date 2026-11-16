@@ -1,0 +1,9 @@
+import { ClipboardCheck, ClipboardList, FilePlus2, Leaf, LogOut, ShieldCheck, UsersRound } from "lucide-react";
+import { NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+
+export default function StaffLayout() {
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+  return <div className="app-shell"><aside className="sidebar"><NavLink to="/" className="brand"><span className="brand-mark"><Leaf size={21} /></span><span>ecoquest<small>{isAdmin ? "COLLEGE CONTROL" : user?.role === "TEACHER" ? "FACULTY STUDIO" : "ORGANIZER STUDIO"}</small></span></NavLink><span className="nav-caption">WORKSPACE</span><nav className="side-nav"><NavLink to="/" end className="nav-link"><ClipboardCheck size={18} /><span>Overview</span></NavLink>{user?.role === "ORGANIZER" && <NavLink to="/events/new" className="nav-link"><FilePlus2 size={18} /><span>Submit event</span></NavLink>}{isAdmin && <><NavLink to="/approvals" className="nav-link"><ClipboardList size={18} /><span>Pending approvals</span></NavLink><NavLink to="/faculty-assignments" className="nav-link"><UsersRound size={18} /><span>Faculty assignments</span></NavLink><NavLink to="/verification" className="nav-link"><ShieldCheck size={18} /><span>Verification</span></NavLink></>}</nav><button className="nav-link" onClick={logout} style={{ marginTop: "auto" }}><LogOut size={18} /><span>Sign out</span></button></aside><div className="app-main"><header className="topbar"><span className="topbar-title">{isAdmin ? "College admin dashboard" : user?.role === "TEACHER" ? "Teacher dashboard" : "Organizer dashboard"}</span><span className="profile-menu-trigger"><span className="avatar">{user?.full_name?.slice(0, 1)}</span>{user?.full_name}</span></header><main className="page-content"><Outlet /></main></div></div>;
+}
