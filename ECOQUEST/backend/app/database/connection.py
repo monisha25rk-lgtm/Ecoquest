@@ -31,13 +31,14 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def initialize_database(bind: Engine = engine) -> None:
-    from app.models import category, college, event, faculty_assignment, notification, organization, progress, registration, review, submission, teacher_profile, user  # noqa: F401
+    from app.models import category, college, event, faculty_assignment, notification, organization, point_transaction, progress, registration, review, submission, teacher_profile, user  # noqa: F401
 
     Base.metadata.create_all(bind=bind, tables=[
         college.College.__table__, user.User.__table__, category.Category.__table__, organization.Organization.__table__, event.Event.__table__,
         registration.EventRegistration.__table__, progress.ProgressLog.__table__, submission.Submission.__table__,
         submission.SubmissionFile.__table__, review.Review.__table__, notification.Notification.__table__,
         faculty_assignment.FacultyAssignment.__table__, teacher_profile.TeacherProfile.__table__,
+        point_transaction.PointTransaction.__table__,
     ])
     _add_shared_columns(bind)
     category.seed_categories(SessionLocal if bind is engine else sessionmaker(bind=bind))

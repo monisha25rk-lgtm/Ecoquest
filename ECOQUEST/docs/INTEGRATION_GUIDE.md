@@ -4,7 +4,7 @@
 
 All three modules must run against one SQLite file and one SQLAlchemy `Base`/engine. Use `app.database.base.Base`, `app.database.connection.engine`, `SessionLocal`, and `get_db`; do not create a second database, Base, user table, category table, or events table. Import all model modules before a full metadata initialization. Keep the shared database at `backend/ecoquest.db` by default, or agree on one `DATABASE_URL` for all processes.
 
-Student-owned models live in `app.models.user`, `category`, `registration`, and `notification`. Models for registrations and notifications declare foreign keys to the Person 2-owned `events.id`. The application postpones creating those two tables until the shared events table exists; it never creates an events table.
+Student-owned models live in `app.models.user`, `category`, `registration`, and `notification`. Models for registrations, notifications, and points declare foreign keys to shared event/evaluation records. The current startup initializer creates the registered shared model tables together; keep the event and review schemas aligned with this integration contract.
 
 ## Person 2: events and publication
 
@@ -38,13 +38,12 @@ For code that needs the principal, declare `user: User = Depends(require_role("A
 
 Person 3 should use the shared `users.id` identity and database. Do not calculate points, award badges, rank students, or generate reports in the Person 1 module.
 
-Agree on URLs and response structures before wiring gamification. Once agreed, set the three full endpoint URLs in the frontend environment:
+Eco Points are recorded in the shared backend ledger and are available to the authenticated student through `GET /points/me`. Do not calculate or fabricate totals in the frontend. Agree on URLs and response structures before wiring external badges and leaderboard integrations. Set endpoint URLs only after those contracts are agreed:
 
-- `VITE_GAMIFICATION_SUMMARY_URL`
 - `VITE_GAMIFICATION_BADGES_URL`
 - `VITE_GAMIFICATION_LEADERBOARD_URL`
 
-The adapter passes the current JWT and renders the returned service data. Without configured endpoints it explicitly reports that the feature is unavailable; it does not fabricate a score or rank.
+The adapter passes the current JWT and renders the returned service data. Without configured endpoints it explicitly reports that the feature is unavailable; it does not fabricate badges or ranks. The optional `VITE_GAMIFICATION_SUMMARY_URL` may be used for external gamification metadata, but it does not override the local Eco Points ledger.
 
 ## Student web client
 

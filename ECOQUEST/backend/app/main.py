@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.database.connection import initialize_database
 from app.routers import auth, categories, events, notifications, registrations
-from app.routers import colleges, faculty, organizations, organizer_events, participation
+from app.routers import colleges, faculty, organizations, organizer_events, participation, points
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ app.include_router(organizer_events.router)
 app.include_router(participation.router)
 app.include_router(faculty.router)
 app.include_router(colleges.router)
+app.include_router(points.router)
 
 
 @app.get("/health", tags=["Health"])

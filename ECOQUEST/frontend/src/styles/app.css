@@ -115,6 +115,16 @@ html[data-theme="dark"] .review-complete-changes_requested { color: #f0cf83; bac
 .impact-card .text-link { color: #c3e6ba; }
 .home-events { margin-top: 30px; }
 .home-events .section-heading { margin-bottom: 15px; }
+.points-history { margin-top: 22px; }
+.points-history .section-heading > strong { color: var(--green); font-size: 11px; }
+.points-history-list { display: grid; }
+.points-history-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.points-history-row > div { display: grid; gap: 4px; min-width: 0; }
+.points-history-row strong { color: var(--text); font-size: 11px; }
+.points-history-row span, .points-history-row small { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.points-history-row b { flex: 0 0 auto; font-size: 12px; }
+.points-positive { color: var(--green); }
+.points-negative { color: #b94a3f; }
 .event-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .event-card { overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 13px; transition: transform .18s, box-shadow .18s; }
 .event-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px #153d2b0d; }

@@ -10,5 +10,6 @@ from app.models.review import Review
 from app.models.college import College
 from app.models.faculty_assignment import FacultyAssignment
 from app.models.teacher_profile import TeacherProfile
+from app.models.point_transaction import PointTransaction
 
-__all__ = ["Category", "EventRegistration", "Notification", "User", "Organization", "Event", "ProgressLog", "Submission", "SubmissionFile", "Review", "College", "FacultyAssignment", "TeacherProfile"]
+__all__ = ["Category", "EventRegistration", "Notification", "User", "Organization", "Event", "ProgressLog", "Submission", "SubmissionFile", "Review", "College", "FacultyAssignment", "TeacherProfile", "PointTransaction"]

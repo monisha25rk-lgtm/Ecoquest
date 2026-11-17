@@ -20,6 +20,8 @@ Evidence accepts JPG, PNG, WEBP, DOC, DOCX, and PDF files up to 10 MB each. Stor
 
 ## Publication and rewards
 
-Publishing calls Person 1's `notify_event_published` service after commit, making publication notifications idempotent. Approving evidence records a `reviews` row and calls `trigger_reward_allocation(registration_id)`. Person 3 owns that hook and must make its point transaction unique by `registration_id`; Person 2 does not calculate or store Eco Points.
+Publishing calls Person 1's `notify_event_published` service after commit, making publication notifications idempotent. Approving evidence records a `reviews` row and calls `trigger_reward_allocation` with the registration and evaluation IDs. The connected Eco Points service records one award for the approved evaluation in `point_transactions`, using the approved event points and faculty grade. Repeated approval requests reuse the existing evaluation and award.
+
+An authorized evaluating faculty member or college admin can reverse an award through `POST /points/transactions/{transaction_id}/reverse`. Reversals are retained as separate negative transactions and can only be recorded once per award. Students read their live total and transaction history from `GET /points/me`.
 
 The implementation uses the specification's exact status values, including `PENDING`, `APPROVED`, `REJECTED`, `PUBLISHED`, `REGISTERED`, `COMPLETED`, `CANCELLED`, `DRAFT`, and `CHANGES_REQUESTED`.

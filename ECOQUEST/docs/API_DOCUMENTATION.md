@@ -59,6 +59,37 @@ Authenticated `STUDENT` only. No body is accepted. Returns `201` with registrati
 
 Authenticated `STUDENT` only. Returns the current student's registrations and event summary. The identity comes from the JWT, not a request-supplied user ID.
 
+## Eco Points
+
+### `GET /points/me`
+
+Authenticated `STUDENT` only. Returns the current student's total and complete transaction history. The student identity is taken from the JWT; clients cannot request another student's points.
+
+```json
+{
+  "total_points": 80,
+  "transactions": [
+    {
+      "transaction_id": 1,
+      "student_id": 5,
+      "event_id": 3,
+      "event_title": "Campus Cleanup",
+      "evaluation_id": 8,
+      "points": 80,
+      "transaction_type": "AWARD",
+      "created_at": "2026-11-17T01:00:00",
+      "reversal_of": null
+    }
+  ]
+}
+```
+
+Awards are recorded only for approved, graded faculty evaluations, calculated as the rounded percentage of the event's approved Eco Points. Totals are calculated from all award and reversal transactions.
+
+### `POST /points/transactions/{transaction_id}/reverse`
+
+Authenticated evaluating `TEACHER` or college `ADMIN` only. Records a separate negative reversal of an award; it never deletes the original transaction. Repeating the request returns the existing reversal. Other teachers and admins outside the student's college receive `403`; unknown transactions return `404`.
+
 ## Notifications
 
 ### `GET /notifications`

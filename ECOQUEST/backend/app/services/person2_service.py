@@ -4,6 +4,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from collections.abc import Callable
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
@@ -18,6 +19,7 @@ from app.models.review import Review
 from app.models.submission import Submission, SubmissionFile
 from app.models.user import User
 from app.services.notification_service import notify_event_published
+from app.services.points_service import allocate_points_for_evaluation
 
 UPLOAD_ROOT = Path(os.getenv("ECOQUEST_UPLOAD_DIR", Path(__file__).resolve().parents[2] / "uploads"))
 ALLOWED_TYPES = {
@@ -143,28 +145,47 @@ def publish_event(db: Session, event: Event, decision, reviewer: User) -> Event:
 
 
 def verify_submission(db: Session, submission: Submission, reviewer: User, decision) -> Submission:
-    if submission.status == "APPROVED" and decision.decision != "APPROVED": raise HTTPException(409, "Approved submissions cannot be changed.")
-    was_approved = submission.status == "APPROVED"
+    if submission.status == "APPROVED":
+        if decision.decision != "APPROVED":
+            raise HTTPException(409, "Approved submissions cannot be changed.")
+        existing_review = db.scalar(
+            select(Review)
+            .where(
+                Review.submission_id == submission.id,
+                Review.submission_version == submission.version,
+                Review.decision == "APPROVED",
+            )
+            .order_by(Review.id.desc())
+        )
+        if existing_review is not None:
+            trigger_reward_allocation(db, submission.registration_id, existing_review.id)
+            return submission
+    elif submission.status != "PENDING":
+        raise HTTPException(409, "Only pending evidence can be evaluated.")
+
     submission.status = decision.decision
     if decision.decision == "APPROVED" and decision.grade is None:
         raise HTTPException(422, "A grade is required when approving evidence.")
     review = Review(submission_id=submission.id, reviewer_id=reviewer.id, decision=decision.decision, grade=decision.grade, note=decision.note, submission_version=submission.version)
-    db.add(review); db.commit(); db.refresh(submission)
-    if decision.decision == "APPROVED" and not was_approved: trigger_reward_allocation(submission.registration_id)
+    db.add(review)
+    db.flush()
+    db.commit()
+    db.refresh(submission)
+    if decision.decision == "APPROVED":
+        trigger_reward_allocation(db, submission.registration_id, review.id)
     return submission
 
 
-REWARD_ALLOCATOR = None
+REWARD_ALLOCATOR: Callable[..., object] | None = allocate_points_for_evaluation
 
 
-def set_reward_allocator(allocator) -> None:
-    """Register Person 3's reward service during application integration."""
+def set_reward_allocator(allocator: Callable[..., object] | None) -> None:
+    """Allow an integrated reward service to replace the default points allocator."""
     global REWARD_ALLOCATOR
     REWARD_ALLOCATOR = allocator
 
 
-def trigger_reward_allocation(registration_id: int) -> None:
-    # Person 3 owns point calculation. When connected, its allocator receives only
-    # the approved registration ID and must enforce idempotency on that ID.
-    if REWARD_ALLOCATOR is not None:
-        REWARD_ALLOCATOR(registration_id=registration_id)
+def trigger_reward_allocation(db: Session, registration_id: int, evaluation_id: int) -> object:
+    if REWARD_ALLOCATOR is None:
+        raise RuntimeError("The Eco Points reward allocator is not configured.")
+    return REWARD_ALLOCATOR(db=db, registration_id=registration_id, evaluation_id=evaluation_id)

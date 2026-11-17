@@ -71,7 +71,7 @@ cd backend
 pytest -q
 ```
 
-Tests use an in-memory SQLite database and a test-only `events` table fixture. Production does not create an `events` table.
+Tests use a temporary SQLite database. Startup initializes the shared model tables, including the event-dependent registration, notification, and Eco Points tables.
 
 ## Environment
 
@@ -86,7 +86,7 @@ Backend variables are in `backend/.env.example`:
 Frontend variables are in `frontend/.env.example`:
 
 - `VITE_API_BASE_URL`: FastAPI base URL.
-- `VITE_GAMIFICATION_SUMMARY_URL`, `VITE_GAMIFICATION_BADGES_URL`, `VITE_GAMIFICATION_LEADERBOARD_URL`: set only to endpoints and response contracts agreed with Person 3. Unconfigured gamification values are shown as unavailable, not fabricated.
+- `VITE_GAMIFICATION_SUMMARY_URL`, `VITE_GAMIFICATION_BADGES_URL`, `VITE_GAMIFICATION_LEADERBOARD_URL`: optional endpoints and response contracts agreed with Person 3 for badges and leaderboard features. Student Eco Points are read from the local `/points/me` API and do not depend on these URLs.
 
 ## API and database
 
@@ -96,6 +96,6 @@ Frontend variables are in `frontend/.env.example`:
 
 ## Person 2 implementation
 
-Person 1 owns `users`, `categories`, `event_registrations`, and `notifications`. The application initializes accounts and categories immediately. Registration and notification tables are initialized only after the shared `events` table is present.
+Person 1 owns `users`, `categories`, `event_registrations`, and `notifications`. Startup initializes the shared model tables together; keep the shared event schema consistent with the integration contract.
 
-Person 2 owns `organizations`, `events`, `progress_logs`, `submissions`, `submission_files`, and `reviews`; see [docs/PERSON2_INTEGRATION.md](docs/PERSON2_INTEGRATION.md). Person 3 still owns points, badges, leaderboards, and reports. The reward hook passes an approved registration ID to Person 3 and does not calculate points locally.
+Person 2 owns `organizations`, `events`, `progress_logs`, `submissions`, `submission_files`, and `reviews`; see [docs/PERSON2_INTEGRATION.md](docs/PERSON2_INTEGRATION.md). Approved faculty evaluations now create durable awards in `point_transactions`; reversals are recorded as separate transactions. Person 3 still owns badges, leaderboards, and reports.

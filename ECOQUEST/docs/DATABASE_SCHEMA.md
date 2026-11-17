@@ -58,8 +58,25 @@ Unique constraint: `(student_id, event_id)`. A cancelled registration can be rea
 
 Unique constraint `(user_id, event_id, title)` makes retrying a published-event notification idempotent.
 
+## Eco Points ledger
+
+`point_transactions` is the append-only Eco Points ledger. Awards reference the approved faculty evaluation; reversals are separate negative transactions referencing the original award. The student's current total is the sum of their ledger entries.
+
+| Column | Type | Constraints |
+|---|---|---|
+| `transaction_id` | Integer | Primary key, auto-increment |
+| `student_id` | Integer | Required; FK `users.id`, indexed |
+| `event_id` | Integer | Required; FK `events.id`, indexed |
+| `evaluation_id` | Integer | Required; FK `reviews.id`, indexed |
+| `points` | Integer | Required; nonnegative for `AWARD`, nonpositive for `REVERSAL` |
+| `transaction_type` | String(20) | Required; `AWARD` or `REVERSAL` |
+| `created_at` | DateTime | Required, database default current time |
+| `reversal_of` | Integer | Optional; FK `point_transactions.transaction_id`, unique |
+
+The database enforces one award and one reversal per evaluation and prevents multiple awards or reversals for the same student/event pair.
+
 ## Shared tables not owned here
 
-Person 2 owns `organizations`, `events`, `progress_logs`, `submissions`, `submission_files`, and `reviews`. Person 3 owns `point_transactions`, `badges`, and `user_badges`. Person 1 does not define or create substitutes for those tables.
+Person 2 owns `organizations`, `events`, `progress_logs`, `submissions`, `submission_files`, and `reviews`. Person 3 owns `badges` and `user_badges`. Person 1 does not define or create substitutes for those tables.
 
-Registration and notification models refer to the shared `events.id`. The initializer creates Person 1's registration and notification tables only when `events` exists. The test suite creates an events table exclusively as an in-memory test fixture.
+Registration and notification models refer to the shared `events.id`. The event-dependent tables are initialized alongside the shared models when the database starts.
